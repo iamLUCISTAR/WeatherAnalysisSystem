@@ -2,24 +2,33 @@ from django.shortcuts import render
 from django.db.utils import IntegrityError
 from django.db.models import Avg
 from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
+
+from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
+import requests
+
 from .models import WeatherData, City
 from . import config
-from geopy.geocoders import Nominatim
-
-import requests
 
 
 @api_view(['GET'])
 def weather_search_view(request):
+    """
+    Function view to return the search page
+    """
     return render(request, 'weather_app/weather_search.html')
 
 
 class WeatherView(APIView):
+    """
+    View class to handle the retrieval and storage of weather data from public api and send back response after
+    processing the stored data.
+    """
     def get(self, request):
         city_names = request.query_params.get('cities', '').split(',')
         if not city_names:
@@ -70,14 +79,22 @@ class WeatherView(APIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
-    def get_lat_long(self, city_name):
+    @staticmethod
+    def get_lat_long(city_name):
+        """
+        Method to get the latitude and longitude coordinates of a city.
+        """
         geolocator = Nominatim(user_agent="api")
         location = geolocator.geocode(city_name)
         if location:
             return location.latitude, location.longitude
         return None, None
 
-    def fetch_and_store_weather_data(self, city, start_time, end_time):
+    @staticmethod
+    def fetch_and_store_weather_data(city, start_time, end_time):
+        """
+        Method to fetch and store the weather reports of a particular city from the public weather api.
+        """
         start_time_str = start_time.strftime('%Y-%m-%dT%H:%M')
         end_time_str = end_time.strftime('%Y-%m-%dT%H:%M')
         url = "https://" + config.WEATHER_API_URL
