@@ -7,7 +7,7 @@ Django application that fetches real-time weather data from a public API, proces
 2. Frontend Technologies Used:
 - HTML, CSS, JS
 3. Deployment:
-- render.com
+- [render.com](https://render.com/)
 4. 3rd party api's for weather data:
 - https://open-meteo.com/en/docs
 
@@ -20,8 +20,6 @@ The DB consists of two tables,
 
 
 ## Code
-
-The application is hosted in https://render.com/.
 
 Endpoints:
 - Search page: https://weatheranalysissystem-u7j9.onrender.com/weather/search/
