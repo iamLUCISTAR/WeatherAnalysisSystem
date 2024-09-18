@@ -23,6 +23,7 @@ The DB consists of two tables,
 
 Endpoints:
 - Search page: https://weatheranalysissystem-u7j9.onrender.com/weather/search/
+- Fetch weather: weather/stats/?cities=Chennai,Bangalore
 
 Working Flow:
   1. User can interact with the Weather Analysis System using the search page.
