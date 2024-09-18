@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from django.db.utils import IntegrityError
 from django.db.models import Avg
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework import status
 from datetime import datetime, timedelta
 from .models import WeatherData, City
@@ -10,6 +12,11 @@ from . import config
 from geopy.geocoders import Nominatim
 
 import requests
+
+
+@api_view(['GET'])
+def weather_search_view(request):
+    return render(request, 'weather_app/weather_search.html')
 
 
 class WeatherView(APIView):
@@ -24,7 +31,16 @@ class WeatherView(APIView):
         start_time = end_time - timedelta(hours=24)
         for city in city_names:
             lat, long = self.get_lat_long(city)
-            City.objects.get_or_create(name=city, latitude=lat, longitude=long)
+            if lat is None:
+                return Response({"error": "Invalid city entered, please check once!!"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                city_obj = City.objects.get(name=city)
+                city_obj.latitude = lat
+                city_obj.longitude = long
+                city_obj.save()
+            except ObjectDoesNotExist:
+                City.objects.create(name=city, latitude=lat, longitude=long)
         cities = City.objects.filter(name__in=city_names)
 
         for city in cities:
@@ -43,13 +59,13 @@ class WeatherView(APIView):
 
         response_data = {}
         for index, city in enumerate(weather_data):
-            print(cities[index].name, end_time.replace(second=0))
             current_data = WeatherData.objects.get(city=cities[index], timestamp=end_time.replace(second=0, microsecond=0))
             response_data[city['city__name']] = {
                 "average_temperature": round(city['average_temperature'], 2),
                 "average_humidity": round(city['average_humidity'], 2),
-                "current_temp": current_data.temperature,
-                "current_humidity": current_data.humidity
+                "current_temperature": current_data.temperature,
+                "current_humidity": current_data.humidity,
+                "current_datetime": end_time.strftime("%dth %B %Y, %H:%M")
             }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -57,7 +73,9 @@ class WeatherView(APIView):
     def get_lat_long(self, city_name):
         geolocator = Nominatim(user_agent="api")
         location = geolocator.geocode(city_name)
-        return location.latitude, location.longitude
+        if location:
+            return location.latitude, location.longitude
+        return None, None
 
     def fetch_and_store_weather_data(self, city, start_time, end_time):
         start_time_str = start_time.strftime('%Y-%m-%dT%H:%M')
