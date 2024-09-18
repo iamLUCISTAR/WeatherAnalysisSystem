@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Weather Stats
+{% endblock %}
+
+{% block css_files %}
+ <link rel="stylesheet" href="{% static 'weather_app/index.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h1>Weather Analysis System</h1>
+    <input type="text" id="cities" placeholder="Enter city names, separated by commas" style="width:300px;">
+    <button onclick="fetchWeatherData()">Search</button>
+</div>
+<div id="loading">Loading, please wait...</div>
+<div class="results" id="results"></div>
+{% endblock %}
+{% block script %}
+    let citiesAboveThreshold = [];
+    function fetchWeatherData() {
+        const cities = document.getElementById('cities').value;
+
+        if (!cities) {
+            alert("Please enter at least one city.");
+            return;
+        }
+
+        showLoading();
+
+        fetch(`/weather/stats/?cities=${encodeURIComponent(cities)}`)
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                displayResults(data);
+                setTimeout(showTemperatureAlert, 100);
+            })
+            .catch(error => {
+                displayError("Failed to fetch weather data. Please try again.");
+                console.error('There was a problem with the fetch operation:', error);
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+
+    function showLoading() {
+            const loadingElement = document.getElementById('loading');
+            loadingElement.style.display = 'block';
+        }
+
+    function hideLoading() {
+        const loadingElement = document.getElementById('loading');
+        loadingElement.style.display = 'none';
+    }
+
+
+    function displayResults(data) {
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+
+        citiesAboveThreshold = [];
+
+        if (data.error) {
+            displayError(data.error);
+            return;
+        }
+
+        for (const city in data) {
+            const avgTemp = data[city].average_temperature.toFixed(2);
+            const avgHumidity = data[city].average_humidity.toFixed(2);
+            const currTemp = data[city].current_temperature.toFixed(2);
+            const currHumidity = data[city].current_humidity.toFixed(2);
+            const currTime = data[city].current_datetime;
+            if (avgTemp > 30) {
+                    citiesAboveThreshold.push(`${city}: ${avgTemp}°C`);
+                }
+            const resultItem = document.createElement('div');
+            resultItem.innerHTML = `<h2>${city}</h2>
+                                    <h3>Current Weather (${currTime})</h3>
+                                    <p>Temperature: ${currTemp}°C</p>
+                                    <p>Humidity: ${currHumidity}%</p>
+                                    <h3>Average Weather</h3>
+                                    <p>Average Temperature for last 24hrs: ${avgTemp}°C</p>
+                                    <p>Average Humidity for last 24hrs: ${avgHumidity}%</p>`;
+            resultsContainer.appendChild(resultItem);
+        }
+    }
+
+    function showTemperatureAlert() {
+        if (citiesAboveThreshold.length > 0) {
+            alert(`Alert: The following cities have average temperatures above 30°C:\n${citiesAboveThreshold.join('\n')}`);
+        }
+    }
+
+    function displayError(message) {
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = `<p class="error">${message}</p>`;
+    }
+{% endblock %}
