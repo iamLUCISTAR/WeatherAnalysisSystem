@@ -1,12 +1,12 @@
 
 # Weather Analysis System v1.0.0
 Django application that fetches real-time weather data from a public API, processes the data, and provides insights and displays an alert if it's extreme.
-Backend Technologies Used:
+1. Backend Technologies Used:
 - Django
 - SQLite3
-Frontend Technologies Used:
+2. Frontend Technologies Used:
 - HTML, CSS, JS
-Deployment:
+3. Deployment:
 - render.com
 3rd party api's for weather data:
 - https://open-meteo.com/en/docs
@@ -23,10 +23,8 @@ The DB consists of two tables,
 
 The application is hosted in render.com endpoint.
 
-Production url: https://weatheranalysissystem-u7j9.onrender.com
-
 Endpoints:
-Search page: https://weatheranalysissystem-u7j9.onrender.com/weather/search/
+- Search page: https://weatheranalysissystem-u7j9.onrender.com/weather/search/
 
 Working Flow:
   1. User can interact with the Weather Analysis System using the search page.
